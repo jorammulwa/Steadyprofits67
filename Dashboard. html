@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - SteadyProfits67</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>Welcome to SteadyProfits67</h1>
+
+    <div class="section">
+      <label for="market">Select Volatility Index:</label>
+      <select id="market">
+        <option value="R_10">Volatility 10</option>
+        <option value="R_25">Volatility 25</option>
+        <option value="R_50">Volatility 50</option>
+        <option value="R_75">Volatility 75</option>
+        <option value="R_100">Volatility 100</option>
+      </select>
+      <button onclick="connectTicks()">Start Analysis</button>
+    </div>
+
+    <div class="output">
+      <h2>Last 10 Digits</h2>
+      <div id="lastDigits" class="digits-display"></div>
+
+      <h2>Streak Alerts</h2>
+      <div id="streaks" class="streaks-display"></div>
+    </div>
+  </div>
+
+  <script src="streakTracker.js"></script>
+</body>
+</html>
