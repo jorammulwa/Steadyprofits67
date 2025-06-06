@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SteadyProfits67 - Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="login-container">
+    <h1>SteadyProfits67</h1>
+    <p>Enter your Deriv API Token to start</p>
+    <input type="password" id="apiToken" placeholder="rXKct4Y1r1Xhgwh" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <script>
+    function login() {
+      const token = document.getElementById('apiToken').value;
+      if (!token) {
+        alert("Please enter your API token.");
+        return;
+      }
+      // Save token to local storage and go to dashboard
+      localStorage.setItem('derivToken', token);
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>
