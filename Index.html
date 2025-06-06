@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SteadyProfits67 - Login</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Steady Profits 67</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f9f9f9; color: #333; padding: 20px; }
+    h1 { color: #0077cc; }
+    select, canvas { margin-top: 20px; display: block; }
+    canvas { border: 1px solid #ccc; }
+  </style>
 </head>
 <body>
-  <div class="login-container">
-    <h1>SteadyProfits67</h1>
-    <p>Enter your Deriv API Token to start</p>
-    <input type="password" id="apiToken" placeholder="rXKct4Y1r1Xhgwh" />
-    <button onclick="login()">Login</button>
-  </div>
 
+  <h1>📊 Steady Profits 67 - Market Analyzer</h1>
+
+  <label for="symbol">Select Volatility Index:</label>
+  <select id="symbol" onchange="changeSymbol()">
+    <option value="R_10">Volatility 10</option>
+    <option value="R_25" selected>Volatility 25</option>
+    <option value="R_50">Volatility 50</option>
+    <option value="R_75">Volatility 75</option>
+    <option value="R_100">Volatility 100</option>
+  </select>
+
+  <canvas id="market-strength-chart" width="500" height="200"></canvas>
+
+  <script src="script.js"></script>
   <script>
-    function login() {
-      const token = document.getElementById('apiToken').value;
-      if (!token) {
-        alert("Please enter your API token.");
-        return;
-      }
-      // Save token to local storage and go to dashboard
-      localStorage.setItem('derivToken', token);
-      window.location.href = "dashboard.html";
+    function changeSymbol() {
+      const selected = document.getElementById('symbol').value;
+      currentSymbol = selected;
+      ws.close(); // Reconnect with new symbol
+      setTimeout(connect, 500);
     }
   </script>
 </body>
