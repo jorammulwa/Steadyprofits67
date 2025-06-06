@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Steady Profits 67 - Market Analyzer</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f0f4f9; color: #333; }
+  #controls { margin-bottom: 20px; }
+  #streaks { margin-top: 20px; }
+  .indicator { padding: 10px; margin: 10px 0; border-radius: 5px; }
+  .strong { background-color: #a4de02; color: #084000; }
+  .weak { background-color: #e33a3a; color: #650000; }
+  .neutral { background-color: #f5c542; color: #5a4b00; }
+</style>
+</head>
+<body>
+
+<h1>Steady Profits 67</h1>
+
+<div id="controls">
+  <label for="contract-select">Select Contract:</label>
+  <select id="contract-select">
+    <option value="R_10">Volatility 10</option>
+    <option value="R_25" selected>Volatility 25</option>
+    <option value="R_50">Volatility 50</option>
+    <option value="R_75">Volatility 75</option>
+    <option value="R_100">Volatility 100</option>
+  </select>
+</div>
+
+<canvas id="strengthChart" width="800" height="300"></canvas>
+
+<div id="streaks">
+  <h3>Digit Streaks</h3>
+  <div id="streak-info">Waiting for data...</div>
+</div>
+
+<div id="trade-buttons" style="margin-top:30px;">
+  <button id="buy-btn">Buy</button>
+  <button id="sell-btn">Sell</button>
+</div>
+
+<script>
+const API_TOKEN = "rXKct4Y1r1Xhgwh"; // Replace with your real token
+
+const contractSelect = document.getElementById("contract-select");
+const streakInfo = document.getElementById("streak-info");
+const buyBtn = document.getElementById("buy-btn");
+const sellBtn = document.getElementById("sell-btn");
+
+// Chart.js setup
+const ctx = document.getElementById("strengthChart").getContext("2d");
+const chartData = {
+  labels: [],
+  datasets: [{
+    label: "Market Momentum",
+    borderColor: "#007bff",
+    backgroundColor: "rgba(0,123,255,0.3)",
+    data: [],
+    fill: true,
+    tension: 0.3,
+  }],
+};
+
+const strengthChart = new Chart(ctx, {
+  type: "line",
+  data: chartData,
+  options: {
+    animation: false,
+    scales: {
+      y: { beginAtZero: true },
+      x: { display: false },
+    },
+    plugins: {
+      legend: { display: true }
+    }
+  }
+});
+
+// Variables to track ticks
+let tickPrices = [];
+let lastDigitStreak = { digit: null, count: 0 };
+
+// WebSocket connection to Deriv API
+let ws = null;
+
+function connectToDeriv(contract) {
+  if (ws) ws.close();
+
+  ws = new WebSocket("wss://ws.binaryws.com/websockets/v3?app_id=1089");
+
+  ws.onopen = () => {
+    console.log("WebSocket connected");
+    subscribeToTicks(contract);
+  };
+
+  ws.onmessage = (msg) => {
+    const data = JSON.parse(msg.data);
+    if (data.msg_type === "tick") {
+      handleTick(data.tick);
+    } else if (data.msg_type === "error") {
+      console.error("API error:", data.error.message);
+    }
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket closed. Reconnecting in 5 seconds...");
+    setTimeout(() => connectToDeriv(contract), 5000);
+  };
+}
+
+function subscribeToTicks(contract) {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(JSON.stringify({
+    ticks: contract,
+    passthrough: { token: API_TOKEN }
+  }));
+}
+
+// Handle each tick from API
+function handleTick(tick) {
+  // Save price & digit
+  const price = tick.quote;
+  const lastDigit = price.toString().slice(-1);
+
+  // Store tick prices (max 1000)
+  tickPrices.push(price);
+  if (tickPrices.length > 1000) tickPrices.shift();
+
+  // Update streak
+  if (lastDigit === lastDigitStreak.digit) {
+    lastDigitStreak.count++;
+  } else {
+    lastDigitStreak.digit = lastDigit;
+    lastDigitStreak.count = 1;
+  }
+
+  // Update streak display
+  streakInfo.textContent = `Last digit: ${lastDigit} | Streak: ${lastDigitStreak.count}`;
+
+  // Update market strength chart
+  updateMarketStrengthChart();
+}
+
+function updateMarketStrengthChart() {
+  if (tickPrices.length < 2) return;
+
+  // Calculate simple momentum = difference between last tick and average of last 5 ticks
+  const lastPrice = tickPrices[tickPrices.length - 1];
+  const recentTicks = tickPrices.slice(-6, -1);
+  const avgRecent = recentTicks.reduce((a, b) => a + b, 0) / recentTicks.length;
+
+  const momentum = lastPrice - avgRecent;
+
+  // Keep data arrays max length 1000
+  if (chartData.labels.length >= 1000) {
+    chartData.labels.shift();
+    chartData.datasets[0].data.shift();
+  }
+
+  // Add new point
+  chartData.labels.push("");
+  chartData.datasets[0].data.push(momentum.toFixed(5));
+
+  strengthChart.update();
+}
+
+// Change contract event
+contractSelect.addEventListener("change", () => {
+  tickPrices = [];
+  lastDigitStreak = { digit: null, count: 0 };
+  chartData.labels = [];
+  chartData.datasets[0].data = [];
+  strengthChart.update();
+
+  const contract = contractSelect.value;
+  connectToDeriv(contract);
+});
+
+// Placeholder trade button handlers
+buyBtn.addEventListener("click", () => {
+  alert("Buy order placed (demo)");
+});
+
+sellBtn.addEventListener("click", () => {
+  alert("Sell order placed (demo)");
+});
+
+// Initial connect to default contract
+connectToDeriv(contractSelect.value);
+</script>
+
+</body>
+  </html>
